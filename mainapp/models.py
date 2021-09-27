@@ -1,9 +1,11 @@
 from django.db import models
 
-# Create your models here.
+
 class ProductCategory(models.Model):
     description = models.TextField(blank=True)
     name = models.CharField(max_length=128, unique=True)
+
+    is_active = models.BooleanField(default=True)
 
     class Meta:
         verbose_name_plural = 'Product Categories'
@@ -22,8 +24,11 @@ class Product(models.Model):
     category = models.ForeignKey(ProductCategory, on_delete=models.CASCADE)  # PROTECT
     status_buy = models.CharField(max_length=64, default='Отправить в корзину')
 
-    #
-    # def __str__(self):
-    #     return f'{self.name} | {self.category.name}'
+    is_active = models.BooleanField(default=True)
+
     def __str__(self):
         return self.name
+
+    @staticmethod
+    def get_items():
+        return Product.objects.filter(is_active=True).order_by('category', 'name')

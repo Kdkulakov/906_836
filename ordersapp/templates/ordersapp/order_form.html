@@ -31,13 +31,13 @@
                        {% for form in orderitems.forms %}
                            {% if forloop.first %}
                                <thead>
-                               <tr class="formset_row">
-                                   {% for field in form.visible_fields %}
-                                       <th class="{% cycle 'td1' 'td2' 'td3' %} order formset_td">
-                                           {{ field.label|capfirst }}
-                                       </th>
-                                   {% endfor %}
-                               </tr>
+                                   <tr>
+                                       {% for field in form.visible_fields %}
+                                           <th class="{% cycle 'td1' 'td2' 'td3' %} order formset_td">
+                                               {{ field.label|capfirst }}
+                                           </th>
+                                       {% endfor %}
+                                   </tr>
                                </thead>
                            {% endif %}
                            <tr class="formset_row">

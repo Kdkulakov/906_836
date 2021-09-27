@@ -22,6 +22,8 @@ class Basket(models.Model):
     quantity = models.PositiveIntegerField(default=0)
     created_timestamp = models.DateTimeField(auto_now_add=True)
 
+    is_active = models.BooleanField(default=True)
+
     @staticmethod
     def get_item(pk):
         return Basket.objects.filter(pk=pk).first()
