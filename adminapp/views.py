@@ -10,6 +10,8 @@ from adminapp.forms import UserAdminRegistrationForm, UserAdminProfileForim
 
 # FBV  = Function-Based-Views
 # CBC  = Class-Based-Views
+from mainapp.models import Product
+
 
 @user_passes_test(lambda u: u.is_superuser, login_url='/')
 def index(request):
@@ -145,3 +147,10 @@ class UserDeleteView(DeleteView):
 #         user.is_active = True
 #     user.save()
 #     return HttpResponseRedirect(reverse('admin_staff:admin_users'))
+
+
+class ProductsListView(ListView):
+    model = Product
+    context_object_name = 'products'
+    template_name = 'product_list.html'
+    success_url = reverse_lazy('admin_staff:admin_users')

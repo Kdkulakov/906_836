@@ -1,13 +1,14 @@
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.views import LoginView
 from django.core.mail import send_mail
+from django.db import transaction
 from django.shortcuts import render, HttpResponseRedirect, redirect
 from django.contrib import auth
 from django.urls import reverse, reverse_lazy
 from django.utils.decorators import method_decorator
 from django.views.generic import CreateView, FormView
 from django.contrib.messages.views import SuccessMessageMixin
-from authapp.forms import UserRegisterForm, UserLoginForm, UserProfileForm
+from authapp.forms import UserRegisterForm, UserLoginForm, UserProfileForm, UserProfileEditForm
 from django.contrib import messages
 from authapp.models import User
 from basketapp.models import Basket
@@ -92,7 +93,7 @@ class RegisterListView(FormView):
             if user.activation_key == activation_key and not user.is_activation_key_expires():
                 user.is_active = True
                 user.save()
-                auth.login(self, user)
+                auth.login(self.request, user, backend='django.contrib.auth.backends.ModelBackend')
                 return render(self, 'mainapp/index.html')
             else:
                 print(f'error activation user: {user}')
@@ -131,33 +132,38 @@ def new_logout(request):
     return HttpResponseRedirect(reverse('index'))
 
 
-class ProfileFormView(FormView):
-    template_name = 'authapp/profile.html'
-    form_class = UserProfileForm
-    success_url = reverse_lazy('auth:profile')
-
-    def get_context_data(self, **kwargs):
-        context = super(ProfileFormView, self).get_context_data(**kwargs)
-        context['title'] = 'GeekShop - Профиль'
-        context['baskets'] = Basket.objects.filter(user=self.request.user)
-        return context
-
-    @method_decorator(login_required)
-    def dispatch(self, request, *args, **kwargs):
-        return super(ProfileFormView, self).dispatch(request, *args, **kwargs)
-
-# @login_required
-# def profile(request):
-#     if request.method == 'POST':
-#         form = UserProfileForm(data=request.POST, files=request.FILES, instance=request.user)
-#         if form.is_valid():
-#             form.save()
-#             return HttpResponseRedirect(reverse('auth:profile'))
-#     else:
-#         form = UserProfileForm(instance=request.user)
+# class ProfileFormView(FormView):
+#     template_name = 'authapp/profile.html'
+#     form_class = UserProfileForm
+#     success_url = reverse_lazy('auth:profile')
 #
-#     context = {
-#         'form': form,
-#         'title': 'GeekShop - Профиль',
-#         'baskets': Basket.objects.filter(user=request.user), }
-#     return render(request, 'authapp/profile.html', context)
+#     def get_context_data(self, **kwargs):
+#         context = super(ProfileFormView, self).get_context_data(**kwargs)
+#         context['title'] = 'GeekShop - Профиль'
+#         context['baskets'] = Basket.objects.filter(user=self.request.user)
+#         return context
+#
+#     @method_decorator(login_required)
+#     def dispatch(self, request, *args, **kwargs):
+#         return super(ProfileFormView, self).dispatch(request, *args, **kwargs)
+
+@transaction.atomic
+def profile(request):
+    if request.method == 'POST':
+        form = UserProfileForm(data=request.POST, files=request.FILES, instance=request.user)
+        profile_form = UserProfileEditForm(data=request.POST, instance=request.user.shopuserprofile)
+
+        if form.is_valid() and profile_form.is_valid():
+            form.save()
+            return HttpResponseRedirect(reverse('auth:profile'))
+    else:
+        form = UserProfileForm(instance=request.user)
+        profile_form = UserProfileEditForm(instance=request.user.shopuserprofile)
+
+    context = {
+        'form': form,
+        'profile_form': profile_form,
+        'title': 'GeekShop - Профиль',
+        'baskets': Basket.objects.filter(user=request.user), }
+
+    return render(request, 'authapp/profile.html', context)

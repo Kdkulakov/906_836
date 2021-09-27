@@ -14,6 +14,9 @@
           crossorigin="anonymous"/>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/js/all.min.js"
             crossorigin="anonymous"></script>
+    {% block css %}
+    {% endblock %}
+
 </head>
 <body class="sb-nav-fixed">
 <nav class="sb-topnav navbar navbar-expand navbar-dark bg-dark">
@@ -59,11 +62,17 @@
                         </div>
                         Категории
                     </a>
-                    <a class="nav-link" href="index.html">
+                    <a class="nav-link" href="{% url 'admin_staff:admin_products' %}">
                         <div class="sb-nav-link-icon">
                             <i class="fas fa-tshirt"></i>
                         </div>
                         Продукты
+                    </a>
+                    <a class="nav-link" href="{% url 'orders:orders_list' %}">
+                        <div class="sb-nav-link-icon">
+                            <i class="fas fa-tshirt"></i>
+                        </div>
+                        Заказы
                     </a>
                 </div>
             </div>
@@ -82,7 +91,7 @@
         </footer>
     </div>
 </div>
-<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" crossorigin="anonymous"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/js/bootstrap.bundle.min.js"
         crossorigin="anonymous"></script>
 <script src="{% static 'js/auth-admin.js' %}"></script>
@@ -90,5 +99,8 @@
 <script src="https://cdn.datatables.net/1.10.20/js/jquery.dataTables.min.js" crossorigin="anonymous"></script>
 <script src="https://cdn.datatables.net/1.10.20/js/dataTables.bootstrap4.min.js" crossorigin="anonymous"></script>
 <script src="{% static 'js/datatable.js' %}"></script>
+
+{% block js %}
+{% endblock %}
 </body>
 </html>
