@@ -27,11 +27,14 @@ def basket_add(request, product_id=None):
         basket.save()
         return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
+
 @login_required
 def basket_delete(request,id=None):
     basket = Basket.objects.get(id=id)
     basket.delete()
     return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+
+
 @login_required
 def basket_edit(request,id,quantity):
     if request.is_ajax():

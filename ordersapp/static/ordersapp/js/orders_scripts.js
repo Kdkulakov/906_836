@@ -84,7 +84,7 @@ window.onload = function () {
 
     $('.order_form select').change(function () {
        var target = event.target;
-       console.log(target);
+       console.info("ORDER_FROM_CHANGE", target);
        orderitem_num = parseInt(target.name.replace('orderitems-', '').replace('-product', ''));
        var orderitem_product_pk = target.options[target.selectedIndex].value;
 
