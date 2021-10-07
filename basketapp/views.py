@@ -5,7 +5,7 @@ from basketapp.models import Basket
 from django.http import JsonResponse
 from django.template.loader import render_to_string
 from django.contrib.auth.decorators import login_required
-
+from django.db.models import F, Q
 # Create your views here.
 
 
@@ -23,13 +23,13 @@ def basket_add(request, product_id=None):
         return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
     else:
         basket = baskets.first()
-        basket.quantity += 1
+        basket.quantity = F('quantity') + 1
         basket.save()
         return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
 
 @login_required
-def basket_delete(request,id=None):
+def basket_delete(request, id=None):
     basket = Basket.objects.get(id=id)
     basket.delete()
     return HttpResponseRedirect(request.META.get('HTTP_REFERER'))

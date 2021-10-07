@@ -1,3 +1,5 @@
+from django.db.models.signals import pre_save
+from django.dispatch import receiver
 from django.shortcuts import render, HttpResponseRedirect
 from django.urls import reverse, reverse_lazy
 from django.contrib.auth.decorators import user_passes_test
@@ -5,12 +7,13 @@ from django.views.generic.list import ListView
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
 from django.utils.decorators import method_decorator
 from authapp.models import User
-from adminapp.forms import UserAdminRegistrationForm, UserAdminProfileForim
-
+from adminapp.forms import UserAdminRegistrationForm, UserAdminProfileForim, ProductCategoryEditForm
+from django.db import connection
+from django.db.models import F, Q
 
 # FBV  = Function-Based-Views
 # CBC  = Class-Based-Views
-from mainapp.models import Product
+from mainapp.models import Product, ProductCategory
 
 
 @user_passes_test(lambda u: u.is_superuser, login_url='/')
@@ -32,7 +35,7 @@ class UserListView(ListView):
         context['title'] = 'GeekShop - Пользователи'
         return context
 
-    @method_decorator(user_passes_test(lambda u: u.is_superuser, login_url='/'))
+    @method_decorator(user_passes_test(lambda u: u.is_superuser, login_url='/auth/login/'))
     def dispatch(self, request, *args, **kwargs):
         return super(UserListView, self).dispatch(request, *args, **kwargs)
 
@@ -56,7 +59,7 @@ class UserCreateView(CreateView):
         context['title'] = 'GeekShop - Создание пользователя'
         return context
 
-    @method_decorator(user_passes_test(lambda u: u.is_superuser, login_url='/'))
+    @method_decorator(user_passes_test(lambda u: u.is_superuser, login_url='/auth/login/'))
     def dispatch(self, request, *args, **kwargs):
         return super(UserCreateView, self).dispatch(request, *args, **kwargs)
 
@@ -154,3 +157,45 @@ class ProductsListView(ListView):
     context_object_name = 'products'
     template_name = 'product_list.html'
     success_url = reverse_lazy('admin_staff:admin_users')
+
+
+def db_profile_by_type(prefix, type, queries):
+    update_queries = list(filter(lambda x: type in x['sql'], queries))
+    print(f'db_profile {type} for {prefix}:')
+    [print(query['sql']) for query in update_queries]
+
+
+@receiver(pre_save, sender=ProductCategory)
+def product_is_active_update_productcategory_save(sender, instance, **kwargs):
+    if instance.pk:
+        if instance.is_active:
+            instance.product_set.update(is_active=True)
+        else:
+            instance.product_set.update(is_active=False)
+
+        db_profile_by_type(sender, 'UPDATE', connection.queries)
+
+
+class ProductCategoryUpdateView(UpdateView):
+    model = ProductCategory
+    template_name = 'product-category-update.html'
+    form_class = ProductCategoryEditForm
+    success_url = reverse_lazy('admin_staff:index')
+
+    def get_context_data(self, **kwargs):
+        context = super(ProductCategoryUpdateView, self).get_context_data(**kwargs)
+        context['title'] = 'GeekShop - Редактирование категории'
+        return context
+
+    def form_valid(self, form):
+        if 'discount' in form.cleaned_data:
+            discount = form.cleaned_data['discount']
+            if discount:
+                self.object.product_set.update(price=F('price') * (1 - discount / 100))
+                db_profile_by_type(self.__class__, 'UPDATE', connection.queries)
+
+        return super().form_valid(form)
+
+    @method_decorator(user_passes_test(lambda u: u.is_superuser, login_url='/'))
+    def dispatch(self, request, *args, **kwargs):
+        return super(ProductCategoryUpdateView, self).dispatch(request, *args, **kwargs)

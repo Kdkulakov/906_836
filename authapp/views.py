@@ -146,7 +146,7 @@ def new_logout(request):
 #     @method_decorator(login_required)
 #     def dispatch(self, request, *args, **kwargs):
 #         return super(ProfileFormView, self).dispatch(request, *args, **kwargs)
-
+@login_required
 @transaction.atomic
 def profile(request):
     if request.method == 'POST':
